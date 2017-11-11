@@ -6,14 +6,15 @@ using Amazon.DynamoDBv2.Model;
 
 namespace BabyBook.Controllers
 {
-	class TableController : ApiController
+	public class TablesController : ApiController
 	{
 		private readonly AmazonDynamoDBClient _client;
-		public TableController() : this(new LocalClientContext())
+
+		public TablesController() : this(new LocalClientContext())
 		{
 		}
 
-		public TableController(AmazonDynamoDBClient client)
+		private TablesController(AmazonDynamoDBClient client)
 		{
 			_client = client;
 		}
@@ -23,56 +24,56 @@ namespace BabyBook.Controllers
 		{
 
 			var tableList = _client.ListTables();
-
 			return tableList.TableNames;
 		}
 
 		// GET api/<controller>/5
-		public string Get(int id)
+		public DescribeTableResponse Get(string id)
 		{
-			return "value";
+			var response = _client.ListTables();
+			return response.TableNames.Contains(id) 
+				? _client.DescribeTable(id) 
+				: null;
 		}
 
 		// POST api/<controller>
 		public void Post([FromBody]string tableName)
 		{
-
-			if (tableName.ToLower() == "babies")
+			var response = _client.ListTables();
+			var lowerCaseTableName = tableName.ToLower();
+			if (response.TableNames.Contains(lowerCaseTableName))
 			{
-				var response = _client.ListTables();
-				if (!response.TableNames.Contains("Babies"))
+				return;
+			}
+
+			switch (tableName.ToLower())
+			{
+				case BabyMemoryConstants.BabiesTableName:
 				{
 					CreateBabiesTable(_client);
+					return;
 				}
-			}
-
-			if (tableName.ToLower() == "memories")
-			{
-				var response = _client.ListTables();
-				if (!response.TableNames.Contains("Memories"))
+				case BabyMemoryConstants.MemoriesTableName:
 				{
 					CreateMemoriesTable(_client);
+					return;
 				}
-			}
-		}
 
-		// PUT api/<controller>/5
-		public void Put(int id, [FromBody]string value)
-		{
+				default:
+					return;
+			}
 		}
 
 		// DELETE api/<controller>/5
-		public void Delete(int id, [FromBody]string tableName)
+		public void Delete(string id)
 		{
-			if (tableName.ToLower() == "babies")
+			var response = _client.ListTables();
+			var lowerCaseTableName = id.ToLower();
+			if (!response.TableNames.Contains(lowerCaseTableName))
 			{
-				var response = _client.ListTables();
-				if (response.TableNames.Contains("Babies"))
-				{
-					_client.DeleteTable("Babies");
-				}
+				return;
 			}
-
+			_client.DeleteTable(lowerCaseTableName);
 		}
 
 
@@ -81,7 +82,7 @@ namespace BabyBook.Controllers
 			// Build a 'CreateTableRequest' for the new table
 			var createRequest = new CreateTableRequest
 			{
-				TableName = "Babies",
+				TableName = BabyMemoryConstants.BabiesTableName,
 				AttributeDefinitions = new List<AttributeDefinition>()
 				{
 					new AttributeDefinition
@@ -136,27 +137,67 @@ namespace BabyBook.Controllers
 
 		private void CreateMemoriesTable(AmazonDynamoDBClient client)
 		{
-			// Build a 'CreateTableRequest' for the new table
-			var createRequest = new CreateTableRequest
+			var provisionedThroughput = new ProvisionedThroughput(1, 1);
+
+			var attributeDefinition = new List<AttributeDefinition>
 			{
-				TableName = "Memories",
-				AttributeDefinitions = new List<AttributeDefinition>()
+				new AttributeDefinition
 				{
-					new AttributeDefinition
-					{
-						AttributeName = "Id",
-						AttributeType = ScalarAttributeType.S
-					}
+					AttributeName = "Id",
+					AttributeType = ScalarAttributeType.S
 				},
-				KeySchema = new List<KeySchemaElement>()
+				new AttributeDefinition
+				{
+					AttributeName = "BabyId",
+					AttributeType = ScalarAttributeType.S
+				},
+				new AttributeDefinition
+				{
+					AttributeName = "Description",
+					AttributeType = ScalarAttributeType.S
+				}
+			};
+
+			var keySchema = new List<KeySchemaElement>()
+			{
+				new KeySchemaElement
+				{
+					AttributeName = "Id",
+					KeyType = KeyType.HASH
+				}
+			};
+
+			var babyIdIndex = new GlobalSecondaryIndex()
+			{
+				IndexName = "BabyIdIndex",
+				ProvisionedThroughput = provisionedThroughput,
+				Projection = new Projection { ProjectionType = ProjectionType.ALL },
+				KeySchema =
 				{
 					new KeySchemaElement
 					{
-						AttributeName = "Id",
+						AttributeName = "BabyId",
 						KeyType = KeyType.HASH
+					},
+					new KeySchemaElement
+					{
+						AttributeName = "Description",
+						KeyType = KeyType.RANGE
 					}
-				},
-				ProvisionedThroughput = new ProvisionedThroughput(1, 1),
+				}
+
+			};
+			
+
+			// Build a 'CreateTableRequest' for the new table
+
+			var createRequest = new CreateTableRequest
+			{
+				TableName = BabyMemoryConstants.MemoriesTableName,
+				AttributeDefinitions = attributeDefinition,
+				ProvisionedThroughput = provisionedThroughput,
+				KeySchema = keySchema,
+				GlobalSecondaryIndexes = {babyIdIndex} 
 			};
 
 			try

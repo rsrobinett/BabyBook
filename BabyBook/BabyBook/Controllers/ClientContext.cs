@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Web.Http;
-using Amazon;
+﻿using Amazon;
 using Amazon.DynamoDBv2;
-using Amazon.Internal;
 
 namespace BabyBook.Controllers
 {
 	public class LocalClientContext : AmazonDynamoDBClient
 	{
-		public LocalClientContext():base(new AmazonDynamoDBConfig {ServiceURL = "http://localhost:8000"})
+		public LocalClientContext():base(
+			new AmazonDynamoDBConfig {ServiceURL = "http://localhost:8001"})
 		{
 			/*
 			AmazonDynamoDBConfig clientConfig = new AmazonDynamoDBConfig();

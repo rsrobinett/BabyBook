@@ -9,9 +9,9 @@ namespace BabyBook.Controllers
 	public class BabiesController : ApiController
 	{
 		private readonly IDynamoDBContext _context;
+
 		public BabiesController() : this(new BabyContext())
 		{
-
 		}
 
 		private BabiesController(IDynamoDBContext context)
@@ -35,7 +35,17 @@ namespace BabyBook.Controllers
 		public Baby Post([FromBody]Baby baby)
 		{
 			baby.Id = Guid.NewGuid().ToString("N");
-			_context.Save(baby);
+			_context.Save<Baby>(baby);
+
+			var memory = new Memory
+			{
+				Id = Guid.NewGuid().ToString("N"),
+				BabyId = baby.Id,
+				Date = baby.DateOfBirth,
+				Description = "born"
+			};
+			_context.Save<Memory>(memory);
+
 			return Get(baby.Id);
 		}
 
@@ -59,7 +69,7 @@ namespace BabyBook.Controllers
 			{
 				return;
 			}
-			_context.Delete(id);
+			_context.Delete<Baby>(existingBaby);
 		}
 	}
 }

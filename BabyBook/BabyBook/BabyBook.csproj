@@ -185,13 +185,12 @@
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="Controllers\AssignmentController.cs" />
     <Compile Include="Controllers\BabiesController.cs" />
+    <Compile Include="Controllers\BabyMemoryConstants.cs" />
     <Compile Include="Controllers\TablesController.cs" />
     <Compile Include="Controllers\BabyContext.cs" />
-    <Compile Include="Controllers\MemoriesTableController .cs" />
     <Compile Include="Controllers\ClientContext.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MemoriesController.cs" />
-    <Compile Include="Controllers\BabiesTableController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

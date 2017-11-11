@@ -24,14 +24,38 @@ namespace BabyBook.Controllers
 		// GET api/<controller>
 		public IEnumerable<Memory> Get()
 		{
-			return _context.Scan<Memory>();
+			var parameters = Request.GetQueryNameValuePairs();
+
+			if (!parameters.Any())
+			{
+				return _context.Scan<Memory>();
+			}
+
+			var memories = new List<Memory>();
+
+			foreach (var queryString in parameters)
+			{
+				if (queryString.Key == "baby")
+				{
+					var results = _context.Query<Memory>(queryString.Value, new DynamoDBOperationConfig {IndexName = "BabyIdIndex"});
+
+					if (results != null)
+					{
+						memories.AddRange(results);
+					}
+				}
+			}
+
+			return memories;
 		}
 
 		// GET api/<controller>/5
 		public Memory Get(string id)
 		{
 			return _context.Load<Memory>(id);
+			//todo: possibley use FromDocuement;
 		}
+
 
 		// POST api/<controller>
 		public Memory Post([FromBody]Memory memory)
@@ -44,8 +68,8 @@ namespace BabyBook.Controllers
 		// PUT api/<controller>/5
 		public void Put(string id, [FromBody]Memory memory)
 		{
-			var existingBaby = Get(id);
-			if (existingBaby == null)
+			var existingMemory = Get(id);
+			if (existingMemory == null)
 			{
 				return;
 			}

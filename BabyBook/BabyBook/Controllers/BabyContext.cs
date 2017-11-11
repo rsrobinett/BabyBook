@@ -10,7 +10,7 @@ namespace BabyBook.Controllers
 			
 		}
 
-		public BabyContext(AmazonDynamoDBClient client)
+		public BabyContext(AmazonDynamoDBClient client) :base(client)
 		{
 			
 		}
