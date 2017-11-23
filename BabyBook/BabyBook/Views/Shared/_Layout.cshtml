@@ -1,7 +1,8 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
+	<meta charset="utf-8" />
+	<meta name="google-site-verification" content="lmEXgKG7yaZc7oNQLTHK3GPpCkUDQ5lKsuWrjxnesXk" />
     <meta name="viewport" content="width=device-width" />
     <title>@ViewBag.Title</title>
     @Styles.Render("~/Content/css")
@@ -20,8 +21,12 @@
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Home", "Index", "Home", new { area = "" }, null)</li>
-                    <li>@Html.ActionLink("API", "Index", "Help", new { area = "" }, null)</li>
+	                <li>@Html.ActionLink("Home", "Index", "Home", new { area = "" }, null)</li>
+	                <li>@Html.ActionLink("Assignment", "Index", "Assignment", new { area = "" }, null)</li>
+	                <li>@Html.ActionLink("API", "Index", "Help", new { area = "" }, null)</li>
+	                <li>@Html.ActionLink("Documentation","Index", "Documentation",null, null)</li>
+	                <li>@Html.ActionLink("TermsAndconditions","TermsAndConditions", "Home", new { area = "" }, null)</li>
+	                <li>@Html.ActionLink("TermsAndconditions","PrivacyPolicy", "Home", new { area = "" }, null)</li>
                 </ul>
             </div>
         </div>

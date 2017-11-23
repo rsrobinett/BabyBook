@@ -14,5 +14,18 @@ namespace BabyBook.Controllers
 
 			return View();
 		}
+		public ActionResult TermsAndConditions()
+		{
+			ViewBag.Title = "Terms And Conditions";
+
+			return View();
+		}
+
+		public ActionResult PrivacyPolicy()
+		{
+			ViewBag.Title = "Privacy Policy";
+
+			return View();
+		}
 	}
 }

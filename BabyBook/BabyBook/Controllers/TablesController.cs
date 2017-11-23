@@ -49,16 +49,20 @@ namespace BabyBook.Controllers
 			switch (tableName.ToLower())
 			{
 				case BabyMemoryConstants.BabiesTableName:
-				{
-					CreateBabiesTable(_client);
-					return;
-				}
+					{
+						CreateBabiesTable(_client);
+						return;
+					}
 				case BabyMemoryConstants.MemoriesTableName:
-				{
-					CreateMemoriesTable(_client);
-					return;
-				}
-
+					{
+						CreateMemoriesTable(_client);
+						return;
+					}
+				case BabyMemoryConstants.UsersTableName:
+					{
+						CreateUsersTable(_client);
+						return;
+					}
 				default:
 					return;
 			}
@@ -122,6 +126,69 @@ namespace BabyBook.Controllers
 					}*/
 				},
 				ProvisionedThroughput = new ProvisionedThroughput(1, 1),
+			};
+
+			try
+			{
+				var createResponse = client.CreateTable(createRequest);
+				Console.WriteLine("\n Table Created " + createResponse.TableDescription);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("\n Error: failed to create the new table; " + ex.Message);
+			}
+		}
+
+		private void CreateUsersTable(AmazonDynamoDBClient client)
+		{
+			var provisionedThroughput = new ProvisionedThroughput(1, 1);
+
+			var attributeDefinition = new List<AttributeDefinition>
+			{
+				new AttributeDefinition
+				{
+					AttributeName = "Id",
+					AttributeType = ScalarAttributeType.S
+				},
+				new AttributeDefinition
+				{
+					AttributeName = "EmailAddress",
+					AttributeType = ScalarAttributeType.S
+				}
+			};
+
+			var keySchema = new List<KeySchemaElement>()
+			{
+				new KeySchemaElement
+				{
+					AttributeName = "Id",
+					KeyType = KeyType.HASH
+				}
+			};
+
+			var userEmailIndex = new GlobalSecondaryIndex()
+			{
+				IndexName = "UserEmailIndex",
+				ProvisionedThroughput = provisionedThroughput,
+				Projection = new Projection { ProjectionType = ProjectionType.ALL },
+				KeySchema =
+				{
+					new KeySchemaElement
+					{
+						AttributeName = "EmailAddress",
+						KeyType = KeyType.HASH
+					}
+				}
+
+			};
+
+			var createRequest = new CreateTableRequest
+			{
+				TableName = BabyMemoryConstants.UsersTableName,
+				AttributeDefinitions = attributeDefinition,
+				ProvisionedThroughput = provisionedThroughput,
+				KeySchema = keySchema,
+				GlobalSecondaryIndexes = { userEmailIndex }
 			};
 
 			try

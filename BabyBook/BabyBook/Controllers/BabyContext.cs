@@ -5,7 +5,7 @@ namespace BabyBook.Controllers
 {
 	public class BabyContext : DynamoDBContext
 	{
-		public BabyContext() : this(new LocalClientContext())
+		public BabyContext() : this(new DevClientContext())
 		{
 			
 		}

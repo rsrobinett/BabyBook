@@ -1,8 +1,35 @@
-﻿@model dynamic
+﻿<div class="jumbotron">
+	<h1>Cloud Only Project</h1>
+	<p class="lead">For this option you will only build a cloud back-end</p>
+</div>
+<div class="row">
+	<ol>
+		<li>You need to implement a REST API</li>
+		<li>User accounts are supported (ie. there is data tied to specific users that only they can see or modify) AND the account system uses 3rd party provider, there should be able to be an arbitrary number of accounts. Accounts *must* have access to some amount of account specific information that only they can either access or modify.</li>
+		<li>There should be at least 2 entities and they should have at least 4 properties each</li>
+		<li>You must also implement one of the following
+			<ol>
+				<li>There should be at least one relationship between entities</li>
+				<li>It needs to meaningfully use a 3rd party API for something other than authentication (for example connecting to a stock market API to get stock data or a weather service to pull weather data)</li>
+			</ol>
+		</li>
+	</ol>
+	<h4>Deliverables</h4>
+	<ol>
+		<li>You should include a full set of Postman tests that show adding, deleting, updating and removing entities (every applicable verb should be used)
+			<ol>
+				<li>This should demonstrate adding, viewing and removing things in a relationship (if applicable)</li>
+				<li>You will need to use some more advanced features of postman to do this because you will need to pull variable names and save them to variables</li>
+			</ol>
+		</li>
+		<li>You should include a PDF
+			<ol>
+				<li>With all the routes used for your API including which verbs work for them</li>
+				<li>A description of the 3rd party service you used</li>
+			</ol>
+		</li>
+		<li>You should include a video of the tests being run in case we are unable to run or interpret the results.</li>
+		<li>You should include a zip of your source code</li>
+	</ol>
 
-@{
-	ViewBag.Title = "title";
-	Layout = "_Layout";
-}
-
-<h2>title</h2>
+</div>

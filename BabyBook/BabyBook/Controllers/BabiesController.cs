@@ -42,7 +42,7 @@ namespace BabyBook.Controllers
 				Id = Guid.NewGuid().ToString("N"),
 				BabyId = baby.Id,
 				Date = baby.DateOfBirth,
-				Description = "born"
+				Description = "Born"
 			};
 			_context.Save<Memory>(memory);
 
@@ -58,7 +58,7 @@ namespace BabyBook.Controllers
 				return;
 			}
 			baby.Id = id;
-			_context.Save(baby);
+			_context.Save<Baby>(baby);
 		}
 
 		// DELETE api/<controller>/5
@@ -69,7 +69,15 @@ namespace BabyBook.Controllers
 			{
 				return;
 			}
-			_context.Delete<Baby>(existingBaby);
+
+			var results = _context.Query<Memory>(id, new DynamoDBOperationConfig { IndexName = "BabyIdIndex" });
+
+			foreach (var result in results)
+			{
+				_context.Delete<Memory>(result.Id);
+			}
+
+			_context.Delete<Baby>(existingBaby.Id);
 		}
 	}
 }

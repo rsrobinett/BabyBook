@@ -22,6 +22,12 @@ namespace BabyBook.Controllers
 		}
 
 		// GET api/<controller>
+		/// <summary>
+		/// Get List of All Memories
+		/// </summary>
+		/// <remarks>
+		/// Lists all memories, possibly just memories for user logged in for baby
+		/// </remarks>
 		public IEnumerable<Memory> Get()
 		{
 			var parameters = Request.GetQueryNameValuePairs();
@@ -50,6 +56,11 @@ namespace BabyBook.Controllers
 		}
 
 		// GET api/<controller>/5
+		/// <summary>
+		/// Get memory by memory id
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
 		public Memory Get(string id)
 		{
 			return _context.Load<Memory>(id);
@@ -58,10 +69,15 @@ namespace BabyBook.Controllers
 
 
 		// POST api/<controller>
+		/// <summary>
+		/// Add new memory
+		/// </summary>
+		/// <param name="memory"></param>
+		/// <returns></returns>
 		public Memory Post([FromBody]Memory memory)
 		{
 			memory.Id = Guid.NewGuid().ToString("N");
-			_context.Save(memory);
+			_context.Save<Memory>(memory);
 			return Get(memory.Id);
 		}
 
@@ -74,7 +90,7 @@ namespace BabyBook.Controllers
 				return;
 			}
 			memory.Id = id;
-			_context.Save(memory);
+			_context.Save<Memory>(memory);
 		}
 
 		// DELETE api/<controller>/5
@@ -85,7 +101,7 @@ namespace BabyBook.Controllers
 			{
 				return;
 			}
-			_context.Delete(id);
+			_context.Delete<Memory>(id);
 		}
 	}
 }
