@@ -31,6 +31,19 @@ namespace BabyBook.Controllers
 			 return _context.Load<Baby>(id);
 		}
 
+		/*
+		public List<Baby> Get([FromBody] List<string> idList)
+		{
+			var batchGet = _context.CreateBatchGet<Baby>();
+			foreach (var id in idList)
+			{
+				batchGet.AddKey(id);
+			}
+			batchGet.Execute();
+			return batchGet.Results;
+		}
+		*/
+
 		// POST api/<controller>
 		public Baby Post([FromBody]Baby baby)
 		{
