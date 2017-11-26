@@ -12,7 +12,7 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.OAuth;
 
-namespace BooksAPI.Identity
+namespace BabyBook.Identity
 {
 	public class CustomOAuthProvider : OAuthAuthorizationServerProvider
 	{

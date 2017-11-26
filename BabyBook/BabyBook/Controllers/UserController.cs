@@ -23,7 +23,16 @@ namespace BabyBook.Controllers
 		    _context = context;
 	    }
 
-	    public IEnumerable<User> Get(string email)
+		/*
+	    // GET: api/User/5
+	    public User Get(string id)
+	    {
+		    return _context.Load<User>(id);
+	    }
+		*/
+
+		// Get: api/user/email/
+		public IEnumerable<User> Get(string email)
 	    {
 		    return _context.Query<User>(email, 
 				new DynamoDBOperationConfig { IndexName = "UserEmailIndex" });
@@ -58,12 +67,6 @@ namespace BabyBook.Controllers
 
 	        return users;
 		}
-
-        // GET: api/User/5
-        public User Get(string id)
-        {
-	        return _context.Load<User>(id);
-        }
 
         // POST: api/User
         public User Post([FromBody]User user)

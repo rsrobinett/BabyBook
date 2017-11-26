@@ -1,4 +1,4 @@
-﻿namespace BooksAPI.Identity
+﻿namespace BabyBook.Identity
 {
 	using System;
 	using System.Configuration;
