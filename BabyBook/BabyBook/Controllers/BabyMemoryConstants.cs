@@ -5,5 +5,6 @@ namespace BabyBook.Controllers
 		internal const string BabiesTableName = "babies";
 		internal const string MemoriesTableName = "memories";
 		internal const string UsersTableName = "users";
+		internal const string AdminUserRole = "admin";
 	}
 }

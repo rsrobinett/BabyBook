@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Threading;
 using System.Web.Mvc;
 using Google.Apis.Auth.OAuth2.Mvc;
 using Google.Apis.Services;
@@ -9,12 +10,15 @@ namespace BabyBook.Controllers
 {
 	public class HomeController : Controller
 	{
+		[AllowAnonymous]
 		public ActionResult Index()
 		{
 			ViewBag.Title = "Home Page";
 
 			return View();
 		}
+
+		[AllowAnonymous]
 		public ActionResult TermsAndConditions()
 		{
 			ViewBag.Title = "Terms And Conditions";
@@ -22,6 +26,7 @@ namespace BabyBook.Controllers
 			return View();
 		}
 
+		[AllowAnonymous]
 		public ActionResult PrivacyPolicy()
 		{
 			ViewBag.Title = "Privacy Policy";

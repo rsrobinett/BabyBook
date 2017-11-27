@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Web.Http;
+using System.Web.Mvc;
 using Amazon.DynamoDBv2.DataModel;
 using BabyBook.Models;
+using Google.Apis.Auth.OAuth2.Mvc;
+using Google.Apis.Plus.v1;
+using Google.Apis.Services;
 
 namespace BabyBook.Controllers
 {

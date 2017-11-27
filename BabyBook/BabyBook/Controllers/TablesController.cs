@@ -152,7 +152,7 @@ namespace BabyBook.Controllers
 				},
 				new AttributeDefinition
 				{
-					AttributeName = "EmailAddress",
+					AttributeName = "Email",
 					AttributeType = ScalarAttributeType.S
 				}
 			};
@@ -175,7 +175,7 @@ namespace BabyBook.Controllers
 				{
 					new KeySchemaElement
 					{
-						AttributeName = "EmailAddress",
+						AttributeName = "Email",
 						KeyType = KeyType.HASH
 					}
 				}

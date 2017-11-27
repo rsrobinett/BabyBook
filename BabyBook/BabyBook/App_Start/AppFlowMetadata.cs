@@ -53,7 +53,7 @@ namespace BabyBook
 			//state should never be stored
 			//throw new NotImplementedException();
 			//return Guid.NewGuid().ToString();
-
+			
 			var user = controller.Session["user"];
 			if (user == null)
 			{
