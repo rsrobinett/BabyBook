@@ -37,19 +37,35 @@ namespace BabyBook.Controllers
 
 		public async Task<User> GetVerifiedUser(AuthenticationHeaderValue token)
 		{
-			var plusData = await GetPlusDataTask(token);
+			var email = await GetVerifiedEmail(token);
+
+			var users = _context.Query<User>(email.ToLower(), new DynamoDBOperationConfig {IndexName = "UserEmailIndex"}).ToList();
+
+			return users != null ? users[0] : null;
+		}
+
+		public async Task<string> GetVerifiedEmail(AuthenticationHeaderValue token)
+		{
+			string plusData;
+			try
+			{
+				plusData = await GetPlusDataTask(token);
+			}
+			catch (Exception e)
+			{
+				//log this somewhere
+				throw new HttpResponseException(HttpStatusCode.Unauthorized);
+			}
+			
 
 			dynamic plusJsonData = JsonConvert.DeserializeObject(plusData);
 			var email = plusJsonData.emails[0].value;
 
 			if (email == null)
 			{
-				throw new HttpResponseException(HttpStatusCode.BadRequest);
+				throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			}
-
-			var users = _context.Query<User>(email, new DynamoDBOperationConfig {IndexName = "UserEmailIndex"});
-
-			return users != null ? users[0] : null;
+			return email;
 		}
 
 		private async Task<string> GetPlusDataTask(AuthenticationHeaderValue token)
