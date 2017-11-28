@@ -17,19 +17,21 @@ namespace BabyBook.Controllers
     {
 	    private readonly IDynamoDBContext _context;
 	    private readonly AuthController _authController;
+	    private BabiesController _babiesController;
 
-		/// <summary>
+	    /// <summary>
 		/// Controller to maintain user identities. 		
 		/// </summary>
-		public UserController() : this (new BabyContext(), new AuthController())
+		public UserController() : this (new BabyContext(), new AuthController(), new BabiesController())
 	    {
 		    
 	    }
 
-	    private UserController(IDynamoDBContext context, AuthController authController)
+	    private UserController(IDynamoDBContext context, AuthController authController, BabiesController babiesController)
 	    {
 		    _context = context;
 		    _authController = authController;
+		    _babiesController = babiesController;
 	    }
 
 
@@ -128,7 +130,8 @@ namespace BabyBook.Controllers
 		/// Non admin user can only add a user with their own verified email address. 
 		/// No user can add an email address that already exists.
 		/// 
-		/// BabyIds is alwasy blank and Id auto generated.
+		/// BabyIds is always blank (babies are added via baby conroller)
+		///  and Id is auto generated.
 		/// Role can be generated as admin when it is created.
 		/// </remarks>
 		/// <param name="user"></param>
@@ -149,13 +152,13 @@ namespace BabyBook.Controllers
 
 			user.Id = Guid.NewGuid().ToString("N");
 
-	        if (currentUserEmail.ToLower() != user.Email.ToLower() ||
-	            currentUser.Role != BabyMemoryConstants.AdminUserRole)
+	        if (!string.Equals(currentUserEmail, user.Email, StringComparison.CurrentCultureIgnoreCase) &&
+	            currentUser?.Role != BabyMemoryConstants.AdminUserRole)
 	        {
 		        throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			}
 
-	        if (currentUser.Role != BabyMemoryConstants.AdminUserRole)
+	        if (currentUser?.Role != BabyMemoryConstants.AdminUserRole)
 	        {
 		        user.Email = user.Email.ToLower();
 	        }
@@ -178,8 +181,8 @@ namespace BabyBook.Controllers
 		/// Update user
 		/// </summary>
 		/// <remarks>
-		/// Admin users can change anything (except id) on any account.  
-		/// Non-admin users can only change the account if it is their own (except id). 
+		/// Admin users can change email and role.  
+		/// Non-admin users can only change the email on the account (note: user would then lose access unless they provide a token for the new email address).
 		/// </remarks>
 		/// <param name="id"></param>
 		/// <param name="user"></param>
@@ -187,7 +190,7 @@ namespace BabyBook.Controllers
 		/// <reponse code = "200" exmaple ="{'exmaple json here'}"></reponse>
 		/// <return>User</returns>
 		// PUT: api/User/5
-		public async Task<IHttpActionResult> Put(string id, [FromBody]User user)
+		public async Task<Dictionary<string, object>> Put(string id, [FromBody]User user)
         {
 	        var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 	        if (currentUser is null)
@@ -199,32 +202,35 @@ namespace BabyBook.Controllers
 	        {
 		        throw new HttpResponseException(HttpStatusCode.BadRequest);
 	        }
-			
 
-	        if (currentUser.Role != BabyMemoryConstants.AdminUserRole)
+	        var usertoUpdate = _context.Load<User>(id);
+
+	        if (currentUser.Role == BabyMemoryConstants.AdminUserRole)
 	        {
-		        user.Role = null;
+		        usertoUpdate.Role = user.Role;
 	        }
 
+			usertoUpdate.Email = user.Email;
+			
 	        user.Id = id;
-
+	        
 	        _context.Save<User>(user);
 
-	        return Ok(ResponseDictionary(user));
+	        return ResponseDictionary(user);
         }
 
 		/// <summary>
-		/// Delete User
+		/// Delete User, Associated babies and associated memories. 
 		/// </summary>
 		/// <remarks>
 		/// Admin User can delete any user.
-		/// Non admin user an only delete it's on user. 
+		/// Non admin user an only delete its own user. 
 		/// </remarks>
 		/// <param name="id"></param>
 		/// <response code="401">Unauthorized: due to user not token not authorized or the request is not available to user role</response> 
 		/// <returns>null</returns>
 		// DELETE: api/User/5
-		public async void Delete(string id)
+		public async Task<IHttpActionResult> Delete(string id)
         {
 	        var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 	        if (currentUser is null)
@@ -236,9 +242,16 @@ namespace BabyBook.Controllers
 	        {
 		        throw new HttpResponseException(HttpStatusCode.Unauthorized);
 	        }
-			
+
+	        foreach (var babyId in currentUser.BabyIds)
+	        {
+		        await _babiesController.Delete(babyId);
+	        }
+
 			_context.Delete<User>(id);
-		}
+
+	        return StatusCode(HttpStatusCode.NoContent); // HttpStatusCode.NoContent;
+        }
 
 
 	    private Dictionary<string, object> ResponseDictionary(User user)
@@ -249,7 +262,7 @@ namespace BabyBook.Controllers
 		    metadata.Add("url", Url.Route("DefaultApi", new { controller = "user"}));
 
 		    var babyurls = new List<string>();
-		    babyurls.AddRange(user.BabyIds.Select(userBabyId =>
+		    babyurls.AddRange(user.BabyIds?.Select(userBabyId =>
 			    Url.Route("DefaultApi", new { controller = "babies", id = userBabyId })));
 		    metadata.Add("baby_urls", babyurls);
 		    return metadata;

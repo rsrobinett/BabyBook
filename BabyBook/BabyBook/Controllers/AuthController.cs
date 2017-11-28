@@ -4,6 +4,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,7 +42,7 @@ namespace BabyBook.Controllers
 
 			var users = _context.Query<User>(email.ToLower(), new DynamoDBOperationConfig {IndexName = "UserEmailIndex"}).ToList();
 
-			return users != null ? users[0] : null;
+			return users.Count > 0 ? users[0] : null;
 		}
 
 		public async Task<string> GetVerifiedEmail(AuthenticationHeaderValue token)
@@ -49,7 +50,7 @@ namespace BabyBook.Controllers
 			string plusData;
 			try
 			{
-				plusData = await GetPlusDataTask(token);
+				plusData = await GetAsyncPlusDataTask(token);
 			}
 			catch (Exception e)
 			{
@@ -68,8 +69,11 @@ namespace BabyBook.Controllers
 			return email;
 		}
 
-		private async Task<string> GetPlusDataTask(AuthenticationHeaderValue token)
+		private async Task<string> GetAsyncPlusDataTask(AuthenticationHeaderValue token)
 		{
+			var uri = "https://www.googleapis.com/plus/v1/people/me";
+
+			/*
 			HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.googleapis.com/plus/v1/people/me");
 			//request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
@@ -81,6 +85,16 @@ namespace BabyBook.Controllers
 			{
 				return await reader.ReadToEndAsync();
 			}
+			*/
+
+			HttpClient hc = new HttpClient();
+			hc.DefaultRequestHeaders.Authorization = token;
+			Task<Stream> result = hc.GetStreamAsync(uri);
+
+			Stream vs = await result;
+			StreamReader am = new StreamReader(vs);
+
+			return await am.ReadToEndAsync();
 		}
 
 		public async Task<User> AuthAsync(CancellationToken cancellationToken, string accessToken)
