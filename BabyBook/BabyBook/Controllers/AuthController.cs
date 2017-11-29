@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+//using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
@@ -74,7 +75,8 @@ namespace BabyBook.Controllers
 			var uri = "https://www.googleapis.com/plus/v1/people/me";
 
 			/*
-			HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://www.googleapis.com/plus/v1/people/me");
+			
+			HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
 			//request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
 			request.Headers = new WebHeaderCollection() {{"Authorization", token.Scheme + " " + token.Parameter } };
@@ -86,7 +88,7 @@ namespace BabyBook.Controllers
 				return await reader.ReadToEndAsync();
 			}
 			*/
-
+			
 			HttpClient hc = new HttpClient();
 			hc.DefaultRequestHeaders.Authorization = token;
 			Task<Stream> result = hc.GetStreamAsync(uri);
@@ -95,6 +97,7 @@ namespace BabyBook.Controllers
 			StreamReader am = new StreamReader(vs);
 
 			return await am.ReadToEndAsync();
+			
 		}
 
 		public async Task<User> AuthAsync(CancellationToken cancellationToken, string accessToken)

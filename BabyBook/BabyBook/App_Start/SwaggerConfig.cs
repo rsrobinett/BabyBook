@@ -67,15 +67,15 @@ namespace BabyBook
 						//    .Name("apiKey")
 						//    .In("header");
 						//
-						c.OAuth2("oauth2")
-							.Description("OAuth2 Implicit Grant")
-							.Flow("implicit")
-							.AuthorizationUrl("https://accounts.google.com/o/oauth2/v2/auth/")
-							.TokenUrl("https://www.googleapis.com/oauth2/v4/token")
-							.Scopes(scopes =>
-							{
-								scopes.Add("email","email");
-							});
+						//c.OAuth2("oauth2")
+						//	.Description("OAuth2 Authorization Grant")
+						//	.Flow("authorizationCode")
+						//	.AuthorizationUrl("https://accounts.google.com/o/oauth2/v2/auth/")
+						//	.TokenUrl("https://www.googleapis.com/oauth2/v4/token")
+						//	.Scopes(scopes =>
+						//	{
+						//		scopes.Add("email","email");
+						//	});
 
 						// Set this flag to omit descriptions for any actions decorated with the Obsolete attribute
 						//c.IgnoreObsoleteActions();
@@ -142,7 +142,7 @@ namespace BabyBook
                         // enum type. Swashbuckle will honor this change out-of-the-box. However, if you use a different
                         // approach to serialize enums as strings, you can also force Swashbuckle to describe them as strings.
                         //
-                        c.DescribeAllEnumsAsStrings();
+                        //c.DescribeAllEnumsAsStrings();
 
                         // Similar to Schema filters, Swashbuckle also supports Operation and Document filters:
                         //

@@ -62,6 +62,11 @@ namespace BabyBook.Controllers
 
 		    var user = _context.Load<User>(id);
 
+		    if (user is null)
+		    {
+			    return BadRequest();
+		    }
+
 		    return Ok(ResponseDictionary(user));
 	    }
 
@@ -105,7 +110,7 @@ namespace BabyBook.Controllers
 		        if (queryString.Key.ToLower() == "email")
 		        {
 
-			        if ( currentUser.Email != queryString.Key.ToLower() || currentUser.Role != BabyMemoryConstants.AdminUserRole)
+			        if ( currentUser.Email != queryString.Value.ToLower() && currentUser.Role != BabyMemoryConstants.AdminUserRole)
 			        {
 				        throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			        }
@@ -188,7 +193,7 @@ namespace BabyBook.Controllers
 		/// <param name="user"></param>
 		///<response code = "401" > Unauthorized: due to user not token not authorized or the request is not available to user role</response>
 		/// <reponse code = "200" exmaple ="{'exmaple json here'}"></reponse>
-		/// <return>User</returns>
+		/// <returns>User</returns>
 		// PUT: api/User/5
 		public async Task<Dictionary<string, object>> Put(string id, [FromBody]User user)
         {
@@ -243,12 +248,15 @@ namespace BabyBook.Controllers
 		        throw new HttpResponseException(HttpStatusCode.Unauthorized);
 	        }
 
-	        foreach (var babyId in currentUser.BabyIds)
+	        if (currentUser.BabyIds != null)
 	        {
-		        await _babiesController.Delete(babyId);
+		        foreach (var babyId in currentUser.BabyIds)
+		        {
+			        await _babiesController.Delete(babyId);
+		        }
 	        }
 
-			_context.Delete<User>(id);
+	        _context.Delete<User>(id);
 
 	        return StatusCode(HttpStatusCode.NoContent); // HttpStatusCode.NoContent;
         }
@@ -261,9 +269,11 @@ namespace BabyBook.Controllers
 		    metadata.Add("user", user);
 		    metadata.Add("url", Url.Route("DefaultApi", new { controller = "user"}));
 
+		    if (user.BabyIds == null) return metadata;
+
 		    var babyurls = new List<string>();
 		    babyurls.AddRange(user.BabyIds?.Select(userBabyId =>
-			    Url.Route("DefaultApi", new { controller = "babies", id = userBabyId })));
+			    Url.Route("DefaultApi", new {controller = "babies", id = userBabyId})));
 		    metadata.Add("baby_urls", babyurls);
 		    return metadata;
 	    }
