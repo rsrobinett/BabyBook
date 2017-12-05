@@ -93,23 +93,12 @@ namespace BabyBook.Controllers
 					{
 						AttributeName = "Id",
 						AttributeType = ScalarAttributeType.S
-					}/*,
-					new AttributeDefinition
-					{
-						AttributeName = "LastName",
-						AttributeType = ScalarAttributeType.S
-					}
-					,
-					new AttributeDefinition
-					{
-						AttributeName = "FirstName",
-						AttributeType = ScalarAttributeType.S
 					},
 					new AttributeDefinition
 					{
-						AttributeName = "DateOfBirth",
+						AttributeName = "UserId",
 						AttributeType = ScalarAttributeType.S
-					}*/
+					}
 				},
 				KeySchema = new List<KeySchemaElement>()
 				{
@@ -117,15 +106,27 @@ namespace BabyBook.Controllers
 					{
 						AttributeName = "Id",
 						KeyType = KeyType.HASH
-					}/*,
-
-					new KeySchemaElement
-					{
-						AttributeName = "LastName",
-						KeyType = KeyType.RANGE
-					}*/
+					}
 				},
 				ProvisionedThroughput = new ProvisionedThroughput(1, 1),
+				GlobalSecondaryIndexes =
+				{
+					new GlobalSecondaryIndex
+					{
+						IndexName = "UserIdIndex",
+						ProvisionedThroughput = new ProvisionedThroughput(1, 1),
+						Projection = new Projection {ProjectionType = ProjectionType.ALL},
+						KeySchema =
+						{
+							new KeySchemaElement
+							{
+								AttributeName = "UserId",
+								KeyType = KeyType.HASH
+							}
+						}
+
+					}
+				}
 			};
 
 			try
@@ -181,7 +182,7 @@ namespace BabyBook.Controllers
 				}
 
 			};
-
+			
 			var createRequest = new CreateTableRequest
 			{
 				TableName = BabyMemoryConstants.UsersTableName,

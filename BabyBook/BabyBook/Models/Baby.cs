@@ -11,7 +11,9 @@ namespace BabyBook.Models
 		public string Id { get; set; }
 		public string FirstName { get; set; }
 		public string LastName { get; set; }
-		public DateTime DateOfBirth { get; set; }
+		public string DateOfBirth { get; set; }
+		[DynamoDBGlobalSecondaryIndexHashKey("UserIdIndex")]
+		public string UserId { get; set; }
 
 	}
 }

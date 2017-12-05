@@ -1,35 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-//using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
 using Amazon.DynamoDBv2.DataModel;
 using BabyBook.Models;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Auth.OAuth2.Mvc;
-using Google.Apis.Auth.OAuth2.Responses;
-using Google.Apis.Plus.v1;
-using Google.Apis.Services;
 using Newtonsoft.Json;
 
 namespace BabyBook.Controllers
 {
 	public class AuthController : Controller
 	{
-		private IDynamoDBContext _context;
+		private readonly IDynamoDBContext _context;
 
 		public AuthController() : this (new BabyContext())
 		{
-
 		}
 
 		private AuthController(IDynamoDBContext context)

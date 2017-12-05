@@ -5,8 +5,9 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
-using Amazon.DynamoDBv2.DataModel;
+using Amazon.DynamoDBv2.DataModel; 
 using BabyBook.Models;
+using Swashbuckle.Swagger.Annotations;
 
 namespace BabyBook.Controllers
 {
@@ -17,23 +18,22 @@ namespace BabyBook.Controllers
     {
 	    private readonly IDynamoDBContext _context;
 	    private readonly AuthController _authController;
-	    private BabiesController _babiesController;
+	    private readonly DataHelpers _dataHelpers;
 
 	    /// <summary>
 		/// Controller to maintain user identities. 		
 		/// </summary>
-		public UserController() : this (new BabyContext(), new AuthController(), new BabiesController())
+		public UserController() : this (new BabyContext(), new AuthController())
 	    {
 		    
 	    }
 
-	    private UserController(IDynamoDBContext context, AuthController authController, BabiesController babiesController)
+	    private UserController(IDynamoDBContext context, AuthController authController)
 	    {
 		    _context = context;
 		    _authController = authController;
-		    _babiesController = babiesController;
+		    _dataHelpers = new DataHelpers(_context);
 	    }
-
 
 		// Get: api/user/5
 		/// <summary>
@@ -42,23 +42,27 @@ namespace BabyBook.Controllers
 		/// <remarks>
 		/// For Admin User returns any user.
 		/// For non-admin user, only returns info for the user.
+		/// 
+		/// Example Request Using Postman Environmental Variables
+		///
 		/// </remarks>
 		/// <param name="id"></param>
 		/// <returns>User</returns>
 		/// <response code="401">Unauthorized: due to user not token not authorized or the request is not available to user role</response> 
 		/// <exception cref="HttpResponseException"></exception>
+		//[SwaggerResponse(HttpStatusCode.OK, "User that was found", typeof(User))]
 		public async Task<IHttpActionResult> Get(string id)
 	    {
 		    var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 		    if (currentUser is null)
 		    {
-				throw new HttpResponseException(HttpStatusCode.BadRequest);
-			}
-		    
-			if(currentUser.Id != id && currentUser.Role != BabyMemoryConstants.AdminUserRole)
+			    throw new HttpResponseException(HttpStatusCode.BadRequest);
+		    }
+
+		    if (currentUser.Id != id && currentUser.Role != BabyMemoryConstants.AdminUserRole)
 		    {
-				throw new HttpResponseException(HttpStatusCode.BadRequest);
-			}
+			    throw new HttpResponseException(HttpStatusCode.BadRequest);
+		    }
 
 		    var user = _context.Load<User>(id);
 
@@ -70,19 +74,19 @@ namespace BabyBook.Controllers
 		    return Ok(ResponseDictionary(user));
 	    }
 
-		// GET: api/User
+	    // GET: api/User
 		/// <summary>
 		/// Get Users
 		/// </summary>
 		/// <remarks>
-		/// A parameter of email can be used to get users by email address
-		/// Users with admin role can get any users
-		/// Users without admin role can only get their own user by email address
+		/// A parameter of email can be used to get users by email address.
+		/// Users with admin role can get any users.
+		/// Users without admin role only returns the authorized user. 
 		/// </remarks>
-		/// <response code="401">Unauthorized: due to user not token not authorized or the request is not available to user role</response> 
+		/// <response code="401">Unauthorized: due to user not token not authorized</response> 
 		/// <returns>User</returns>
 		/// <exception cref="HttpResponseException"></exception>
-		public async Task<IEnumerable<User>> Get()
+		public async Task<IEnumerable<Dictionary<string, object>>> Get()
         {
 			var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 	        if (currentUser is null)
@@ -91,40 +95,36 @@ namespace BabyBook.Controllers
 	        }
 
 			var parameters = Request.GetQueryNameValuePairs();
+	        var users = new List<Dictionary<string, object>>();
 
-	        if (!parameters.Any())
+
+			if (!parameters.Any())
 	        {
 
 		        if (currentUser.Role != BabyMemoryConstants.AdminUserRole)
 		        {
-			        throw new HttpResponseException(HttpStatusCode.Unauthorized);
+			        return new List<Dictionary<string, object>>(){ResponseDictionary(currentUser)};
 		        }
 
-				return _context.Scan<User>();
+				var scannedUsers = _context.Scan<User>();
+
+		        users.AddRange(scannedUsers.Select(ResponseDictionary));
+
+		        return users;
 	        }
 
-	        var users = new List<User>();
-
-	        foreach (var queryString in parameters)
+	       foreach (var queryString in parameters)
 	        {
-		        if (queryString.Key.ToLower() == "email")
+		        if (queryString.Key.ToLower() != "email") continue;
+				
+		        if ( currentUser.Email.ToLower().Trim() == queryString.Value.ToLower().Trim() || (currentUser.Role == BabyMemoryConstants.AdminUserRole))
 		        {
+					return _context.Query<User>(queryString.Value.ToLower(), new DynamoDBOperationConfig { IndexName = "UserEmailIndex" }).Select(ResponseDictionary);
+				}
+		        
+			}
 
-			        if ( currentUser.Email != queryString.Value.ToLower() && currentUser.Role != BabyMemoryConstants.AdminUserRole)
-			        {
-				        throw new HttpResponseException(HttpStatusCode.Unauthorized);
-			        }
-
-					var results = _context.Query<User>(queryString.Value.ToLower(), new DynamoDBOperationConfig { IndexName = "UserEmailIndex" });
-
-			        if (results != null)
-			        {
-				        users.AddRange(results);
-			        }
-		        }
-	        }
-
-	        return users;
+	        throw new HttpResponseException(HttpStatusCode.BadRequest);
 		}
 
 		/// <summary>
@@ -138,6 +138,11 @@ namespace BabyBook.Controllers
 		/// BabyIds is always blank (babies are added via baby conroller)
 		///  and Id is auto generated.
 		/// Role can be generated as admin when it is created.
+		/// 
+		///{
+	    ///	"Email": "{{email}}",
+	    ///	"Role": "admin"  //or "any thing but admin"
+	    ///}
 		/// </remarks>
 		/// <param name="user"></param>
 		/// <response code="519">email address already used</response>
@@ -157,27 +162,29 @@ namespace BabyBook.Controllers
 
 			user.Id = Guid.NewGuid().ToString("N");
 
-	        if (!string.Equals(currentUserEmail, user.Email, StringComparison.CurrentCultureIgnoreCase) &&
+	        if (!string.Equals(currentUserEmail.ToLower().Trim(), user.Email.ToLower().Trim(), StringComparison.CurrentCultureIgnoreCase) &&
 	            currentUser?.Role != BabyMemoryConstants.AdminUserRole)
 	        {
 		        throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			}
 
-	        if (currentUser?.Role != BabyMemoryConstants.AdminUserRole)
+	        if (currentUser?.Role == BabyMemoryConstants.AdminUserRole)
 	        {
 		        user.Email = user.Email.ToLower();
 	        }
+	        else
+	        {
+		        user.Email = currentUserEmail.ToLower();
+			}
 
-			user.BabyIds = new List<string>();
+	        var existingUsers = _context.Query<User>(user.Email.ToLower(), new DynamoDBOperationConfig { IndexName = "UserEmailIndex" }).ToList();
 
-			var existingUsers = _context.Query<User>(user.Email.ToLower(), new DynamoDBOperationConfig { IndexName = "UserEmailIndex" }).ToList();
-
-	        if (existingUsers.Count > 1)
+	        if (existingUsers.Count > 0)
 	        {
 		        throw new HttpResponseException(HttpStatusCode.Conflict);
 			}
 
-	        _context.Save<User>(user);
+	        _context.Save<User>(user); 
 
 	        return Created(Url.Route("DefaultApi", new { controller = "User" }), ResponseDictionary(user));
 		}
@@ -215,7 +222,7 @@ namespace BabyBook.Controllers
 		        usertoUpdate.Role = user.Role;
 	        }
 
-			usertoUpdate.Email = user.Email;
+			usertoUpdate.Email = user.Email.ToLower();
 			
 	        user.Id = id;
 	        
@@ -247,33 +254,42 @@ namespace BabyBook.Controllers
 	        {
 		        throw new HttpResponseException(HttpStatusCode.Unauthorized);
 	        }
+			
+	        var userBabies = _dataHelpers.BabiesForUserAndRole(currentUser);
 
-	        if (currentUser.BabyIds != null)
+			if (userBabies != null)
 	        {
-		        foreach (var babyId in currentUser.BabyIds)
+		        foreach (var baby in userBabies)
 		        {
-			        await _babiesController.Delete(babyId);
-		        }
+			        _context.Delete<Baby>(baby.Id);
+				}
 	        }
 
 	        _context.Delete<User>(id);
 
-	        return StatusCode(HttpStatusCode.NoContent); // HttpStatusCode.NoContent;
+	        return StatusCode(HttpStatusCode.NoContent); 
         }
-
 
 	    private Dictionary<string, object> ResponseDictionary(User user)
 	    {
 		    Dictionary<string, object> metadata = new Dictionary<string, object>();
 
 		    metadata.Add("user", user);
-		    metadata.Add("url", Url.Route("DefaultApi", new { controller = "user"}));
+		    metadata.Add("url", Url.Route("DefaultApi", new { controller = "user", id = user.Id}));
 
-		    if (user.BabyIds == null) return metadata;
+		    var userBabies = _context.Query<Baby>(user.Id,
+				    new DynamoDBOperationConfig {IndexName = "UserIdIndex"})
+			    .ToList();
+
+
+			if (userBabies.Count < 1)
+		    {
+			    return metadata;
+		    }
 
 		    var babyurls = new List<string>();
-		    babyurls.AddRange(user.BabyIds?.Select(userBabyId =>
-			    Url.Route("DefaultApi", new {controller = "babies", id = userBabyId})));
+		    babyurls.AddRange(userBabies.Select(baby =>
+			    Url.Route("DefaultApi", new {controller = "babies", id = baby.Id})));
 		    metadata.Add("baby_urls", babyurls);
 		    return metadata;
 	    }
