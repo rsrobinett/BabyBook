@@ -64,21 +64,6 @@ namespace BabyBook.Controllers
 		{
 			var uri = "https://www.googleapis.com/plus/v1/people/me";
 
-			/*
-			
-			HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
-			//request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-			request.Headers = new WebHeaderCollection() {{"Authorization", token.Scheme + " " + token.Parameter } };
-
-			using (HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync())
-			using (Stream stream = response.GetResponseStream())
-			using (StreamReader reader = new StreamReader(stream))
-			{
-				return await reader.ReadToEndAsync();
-			}
-			*/
-			
 			HttpClient hc = new HttpClient();
 			hc.DefaultRequestHeaders.Authorization = token;
 			Task<Stream> result = hc.GetStreamAsync(uri);

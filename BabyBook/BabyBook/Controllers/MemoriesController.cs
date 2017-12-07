@@ -128,7 +128,7 @@ namespace BabyBook.Controllers
 		}
 
 		// PUT api/<controller>/5
-		public async void Put(string id, [FromBody]Memory memory)
+		public async Task<Dictionary<string,object>> Put(string id, [FromBody]Memory memory)
 		{
 			var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 
@@ -152,6 +152,8 @@ namespace BabyBook.Controllers
 			
 			memory.Id = id;
 			_context.Save<Memory>(memory);
+
+			return ResponseDictionary(memory);
 		}
 
 		// DELETE api/<controller>/5
@@ -159,7 +161,7 @@ namespace BabyBook.Controllers
 		/// Delete Memory
 		/// </summary>
 		/// <param name="id"></param>
-		public async void Delete(string id)
+		public async Task<IHttpActionResult> Delete(string id)
 		{
 			var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 
@@ -187,6 +189,8 @@ namespace BabyBook.Controllers
 			}
 
 			_context.Delete<Memory>(id);
+
+			return StatusCode(HttpStatusCode.NoContent);
 		}
 
 

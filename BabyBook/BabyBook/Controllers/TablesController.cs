@@ -10,7 +10,7 @@ namespace BabyBook.Controllers
 	{
 		private readonly AmazonDynamoDBClient _client;
 
-		public TablesController() : this(new LocalClientContext())
+		public TablesController() : this(new DevClientContext())
 		{
 		}
 

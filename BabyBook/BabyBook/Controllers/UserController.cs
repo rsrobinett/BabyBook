@@ -103,7 +103,7 @@ namespace BabyBook.Controllers
 
 		        if (currentUser.Role != BabyMemoryConstants.AdminUserRole)
 		        {
-			        return new List<Dictionary<string, object>>(){ResponseDictionary(currentUser)};
+			        return new List<Dictionary<string, object>>{ResponseDictionary(currentUser)};
 		        }
 
 				var scannedUsers = _context.Scan<User>();
@@ -119,8 +119,10 @@ namespace BabyBook.Controllers
 				
 		        if ( currentUser.Email.ToLower().Trim() == queryString.Value.ToLower().Trim() || (currentUser.Role == BabyMemoryConstants.AdminUserRole))
 		        {
-					return _context.Query<User>(queryString.Value.ToLower(), new DynamoDBOperationConfig { IndexName = "UserEmailIndex" }).Select(ResponseDictionary);
-				}
+			        var us = _context.Query<User>(queryString.Value.ToLower(), new DynamoDBOperationConfig { IndexName = "UserEmailIndex" });
+
+			        return us.Select(user => ResponseDictionary(user)).ToList();
+		        }
 		        
 			}
 
@@ -217,12 +219,17 @@ namespace BabyBook.Controllers
 
 	        var usertoUpdate = _context.Load<User>(id);
 
+	        if (usertoUpdate == null)
+	        {
+		        throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
+
 	        if (currentUser.Role == BabyMemoryConstants.AdminUserRole)
 	        {
 		        usertoUpdate.Role = user.Role;
 	        }
 
-			usertoUpdate.Email = user.Email.ToLower();
+			user.Email = user.Email.ToLower();
 			
 	        user.Id = id;
 	        

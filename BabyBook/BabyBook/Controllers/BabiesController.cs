@@ -86,7 +86,7 @@ namespace BabyBook.Controllers
 
 			var userBabies = _dataHelpers.BabiesForUserAndRole(currentUser);
 
-			if (!(userBabies.Exists(x => x.Id == id)))
+			if (!(userBabies.Any(x => x.Id == id)))
 			{
 				throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			}
@@ -118,7 +118,7 @@ namespace BabyBook.Controllers
 		/// </remarks>
 		/// <param name="baby"></param>
 		/// <returns></returns>
-		public async Task<Dictionary<string, object>> Post([FromBody]Baby baby)
+		public async Task<IHttpActionResult> Post([FromBody]Baby baby)
 		{
 			var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 			
@@ -127,22 +127,27 @@ namespace BabyBook.Controllers
 				throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			}
 
-			if (currentUser.Role != BabyMemoryConstants.AdminUserRole && !baby.UserId.IsNullOrWhiteSpace())
+			if (currentUser.Role != BabyMemoryConstants.AdminUserRole || !baby.UserId.IsNullOrWhiteSpace())
 			{
 				baby.UserId = currentUser.Id;
+			}
+			else
+			{
+				var userOfBaby = _context.Load<User>(baby.UserId);
+
+				if (userOfBaby == null)
+				{
+					throw new HttpResponseException(HttpStatusCode.BadRequest);
+				}
+				else
+				{
+					baby.UserId = userOfBaby.Id;
+				}
+
 			}
 
 			baby.Id = Guid.NewGuid().ToString("N");
 			_context.Save<Baby>(baby);
-
-			/*
-			if (currentUser.BabyIds == null)
-			{
-				currentUser.BabyIds = new List<string>();
-			}
-			currentUser.BabyIds.Add(baby.Id);
-			_context.Save<User>(currentUser);
-			*/
 
 			var memory = new Memory
 			{
@@ -153,7 +158,7 @@ namespace BabyBook.Controllers
 			};
 			_context.Save<Memory>(memory);
 
-			return ResponseDictionary(_context.Load<Baby>(baby.Id));
+			return Created(Url.Route("DefaultApi", new { controller = "Babies" }), ResponseDictionary(_context.Load<Baby>(baby.Id)));
 		}
 
 		// PUT api/<controller>/5
@@ -166,7 +171,7 @@ namespace BabyBook.Controllers
 		/// <param name="id"></param>
 		/// <param name="baby"></param>
 		/// <exception cref="HttpResponseException"></exception>
-		public async void Put(string id, [FromBody]Baby baby)
+		public async Task<Dictionary<string,object>> Put(string id, [FromBody]Baby baby)
 		{
 			var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
 
@@ -176,22 +181,28 @@ namespace BabyBook.Controllers
 			}
 
 			var userBabies = _dataHelpers.BabiesForUserAndRole(currentUser);
-
-			if (!(userBabies.Exists(x => x.Id == id)))
-			{
-				throw new HttpResponseException(HttpStatusCode.Unauthorized);
-			}
-			
 			var currentBaby = userBabies.FirstOrDefault(x => x.Id == id);
 
-			if (currentBaby != null && baby.DateOfBirth != currentBaby.DateOfBirth)
+			if (currentBaby == null)
+			{
+				throw new HttpResponseException(HttpStatusCode.BadRequest);
+			}
+
+			if (baby.DateOfBirth != currentBaby.DateOfBirth)
 			{
 				//todo: add functionality to update birth memory if dob changes. 	
+			}
+
+			if (currentUser.Role != BabyMemoryConstants.AdminUserRole || baby.UserId.IsNullOrWhiteSpace())
+			{
+				baby.UserId = currentBaby.UserId;
 			}
 			
 			baby.Id = id;
 			
 			_context.Save<Baby>(baby);
+
+			return ResponseDictionary(baby);
 		}
 
 		// DELETE api/<controller>/5
@@ -220,7 +231,7 @@ namespace BabyBook.Controllers
 
 			var babies = _dataHelpers.BabiesForUserAndRole(currentUser);
 
-			if (!(babies.Exists(x => x.Id == id)))
+			if (!(babies.Any(x => x.Id == id)))
 			{
 				throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			}

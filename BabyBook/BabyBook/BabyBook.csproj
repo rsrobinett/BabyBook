@@ -256,7 +256,6 @@
     <Compile Include="Controllers\DataHelpers.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\MemoriesController.cs" />
-    <Compile Include="Controllers\TablesController.cs" />
     <Compile Include="Controllers\LoginController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Global.asax.cs">
