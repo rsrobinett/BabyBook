@@ -30,7 +30,7 @@ namespace BabyBook.Controllers
 
 		// GET api/<controller>
 		/// <summary>
-		/// Get List of All Memories
+		/// Get Memories
 		/// </summary>
 		/// <remarks>
 		/// Lists all memories, possibly just memories for user logged in for baby
@@ -45,10 +45,8 @@ namespace BabyBook.Controllers
 			}
 
 			var parameters = Request.GetQueryNameValuePairs().ToList();
-
-			//var memories = new List<Memory>();
-
-				List<Memory> memories;
+			
+			List<Memory> memories;
 
 			switch (currentUser.Role)
 			{
@@ -65,8 +63,12 @@ namespace BabyBook.Controllers
 
 		// GET api/<controller>/5
 		/// <summary>
-		/// Get memory by memory id
+		/// Get memory by id
 		/// </summary>
+		/// <remarks>
+		/// Admin User can get any user
+		/// Basic user can only get itself
+		/// </remarks>
 		/// <param name="id"></param>
 		/// <returns></returns>
 		public async Task<Dictionary<string, object>> Get(string id)
@@ -128,6 +130,18 @@ namespace BabyBook.Controllers
 		}
 
 		// PUT api/<controller>/5
+		/// <summary>
+		///</summary>
+		/// <remarks>
+		/// Update memory date or description.
+		/// Admin can update any memory
+		/// Basic user can only update memories associated with the authorized user. 
+		/// BabyId cannot be updated
+		/// </remarks>
+		/// <param name="id"></param>
+		/// <param name="memory"></param>
+		/// <returns></returns>
+		/// <exception cref="HttpResponseException"></exception>
 		public async Task<Dictionary<string,object>> Put(string id, [FromBody]Memory memory)
 		{
 			var currentUser = await _authController.GetVerifiedUser(Request.Headers.Authorization);
@@ -151,15 +165,19 @@ namespace BabyBook.Controllers
 			}
 			
 			memory.Id = id;
+			memory.BabyId = currentMemory.BabyId;
 			_context.Save<Memory>(memory);
 
 			return ResponseDictionary(memory);
 		}
 
 		// DELETE api/<controller>/5
-		/// <summary>
-		/// Delete Memory
-		/// </summary>
+		/// <summary>Delete Memory</summary>
+		/// <remarks>
+		/// Admin User can delete any user
+		/// Basic User can only delete the authorized user
+		/// </remarks>
+		/// <example>where does this go</example>
 		/// <param name="id"></param>
 		public async Task<IHttpActionResult> Delete(string id)
 		{

@@ -26,14 +26,17 @@ namespace BabyBook.Controllers
 			_authController = authController;
 			_dataHelpers = new DataHelpers(_context);
 		}
-		
+
 		// GET api/<controller>
 		/// <summary>
-		/// Get Babies.
+		/// Get Babies
+		/// </summary>
+		/// <remarks>
 		/// Admin Users get all babies.
 		/// Basic Users get only babies for the user.
-		/// </summary>
-		/// <returns></returns>
+		/// </remarks>
+		/// <returns>Where does this go?</returns>
+		/// <example>Where is the example?</example>
 		/// <exception cref="HttpResponseException"></exception>
 		public async Task<List<Dictionary<string, object>>> Get()
 		{
@@ -63,9 +66,11 @@ namespace BabyBook.Controllers
 		// GET api/<controller>/5
 		/// <summary>
 		/// Get Baby By Id
+		/// </summary>
+		/// <remarks>
 		/// Admin users can get any baby
 		/// Basic users can only get babies for the authorized user
-		/// </summary>
+		/// </remarks>
 		/// <param name="id"></param>
 		/// <returns></returns>
 		/// <exception cref="HttpResponseException"></exception>
@@ -95,25 +100,13 @@ namespace BabyBook.Controllers
 			return ResponseDictionary(userBabies.FirstOrDefault(x => x.Id == id));
 		}
 
-		/*
-		public List<Baby> Get([FromBody] List<string> idList)
-		{
-			var batchGet = _context.CreateBatchGet<Baby>();
-			foreach (var id in idList)
-			{
-				batchGet.AddKey(id);
-			}
-			batchGet.Execute();
-			return batchGet.Results;
-		}
-		*/
-
 		// POST api/<controller>
 		/// <summary>
-		/// Creates baby, adds baby to authorized user, adds memory of babys birth
-		/// Admin has the same abilites as a basic user. 
+		/// Create baby
 		/// </summary>
 		/// <remarks>
+		/// Creates baby, adds baby to authorized user, adds memory of babys birth
+		/// Admin has the same abilites as a basic user.
 		/// There is no special behavior for admin users.
 		/// </remarks>
 		/// <param name="baby"></param>
@@ -163,7 +156,7 @@ namespace BabyBook.Controllers
 
 		// PUT api/<controller>/5
 		/// <summary>
-		/// Updates baby.
+		/// Update baby
 		/// </summary>
 		/// <remarks>
 		/// Associated User or Admin user can update baby, but not the id.  
@@ -207,11 +200,12 @@ namespace BabyBook.Controllers
 
 		// DELETE api/<controller>/5
 		/// <summary>
-		/// Deletes baby, removes baby from the user and deletes associated memories.
+		/// Deletes baby
 		/// </summary>
 		/// <remarks>
-		/// Only the user associated with the baby can delete the baby.  
-		/// Admin role cannot delete a baby that is not associated with the user.  
+		/// Deletes baby, removes baby from the user and deletes associated memories.
+		/// Admin can delete any baby
+		/// Basic user can only delete baby associated with the authorized user
 		/// </remarks>
 		/// <param name="id"></param>
 		/// <exception cref="HttpResponseException"></exception>
@@ -223,11 +217,6 @@ namespace BabyBook.Controllers
 			{
 				throw new HttpResponseException(HttpStatusCode.Unauthorized);
 			}
-
-			//if (currentUser.Role != BabyMemoryConstants.AdminUserRole)// && (currentUser?.BabyIds == null || currentUser.BabyIds.All(x => x != id)))
-			//{
-			//	throw new HttpResponseException(HttpStatusCode.Unauthorized);
-			//}
 
 			var babies = _dataHelpers.BabiesForUserAndRole(currentUser);
 
@@ -249,9 +238,7 @@ namespace BabyBook.Controllers
 
 			return StatusCode(HttpStatusCode.NoContent);
 		}
-
-
-
+		
 		private Dictionary<string, object> ResponseDictionary(Baby baby)
 		{
 			Dictionary<string, object> metadata = new Dictionary<string, object>();

@@ -42,9 +42,6 @@ namespace BabyBook.Controllers
 		/// <remarks>
 		/// For Admin User returns any user.
 		/// For non-admin user, only returns info for the user.
-		/// 
-		/// Example Request Using Postman Environmental Variables
-		///
 		/// </remarks>
 		/// <param name="id"></param>
 		/// <returns>User</returns>
@@ -140,11 +137,6 @@ namespace BabyBook.Controllers
 		/// BabyIds is always blank (babies are added via baby conroller)
 		///  and Id is auto generated.
 		/// Role can be generated as admin when it is created.
-		/// 
-		///{
-	    ///	"Email": "{{email}}",
-	    ///	"Role": "admin"  //or "any thing but admin"
-	    ///}
 		/// </remarks>
 		/// <param name="user"></param>
 		/// <response code="519">email address already used</response>
@@ -239,11 +231,12 @@ namespace BabyBook.Controllers
         }
 
 		/// <summary>
-		/// Delete User, Associated babies and associated memories. 
+		/// Delete User
 		/// </summary>
 		/// <remarks>
 		/// Admin User can delete any user.
 		/// Non admin user an only delete its own user. 
+		/// Deleting a user also deletes ssociated babies and associated memories. 
 		/// </remarks>
 		/// <param name="id"></param>
 		/// <response code="401">Unauthorized: due to user not token not authorized or the request is not available to user role</response> 

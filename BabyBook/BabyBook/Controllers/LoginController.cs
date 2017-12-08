@@ -24,6 +24,10 @@ namespace BabyBook.Controllers
 
 		}
 
+		/// <summary>
+		/// Helper api to populate token header in Postman
+		/// </summary>
+		/// <returns></returns>
 		[HttpGet]
 		public async Task<IHttpActionResult> Login()
 		{
